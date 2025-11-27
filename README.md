@@ -5,3 +5,7 @@ Zeabur API Key 应用实例；基于zeabur API KEY通过web管理监控服务；
 ## Cloudflare-worker 部署
 1. Workers:将`cloudflar_worker.js`代码粘贴到workers
 2. KV：绑定一个KV（绑定名称即：`KV`）
+
+## 添加账户
+1. 复制Zeabur 账户的API KEY；
+2. 服务面板上点击‘添加新账户’，粘贴API KEY，点击确定，自动更新数据到KV
