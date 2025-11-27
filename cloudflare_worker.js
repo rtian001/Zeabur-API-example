@@ -114,6 +114,19 @@ export default {
             });
         };
 
+                //******API更新数据到KV****** */
+        async function update_account(kv_data, token) {
+            let result = await query_regions(token);
+            if (!!result) {
+                let _username = result.name;
+                kv_data[_username] = result;
+                await KV.put('zeabur', JSON.stringify(kv_data));
+                return { success: true, messages: { account: _username, email: result.email, update: result.update } }
+            } else {
+                return { success: false, messages: 'token error.' }
+            }
+        }
+
     }//fetch
 }//default
 
