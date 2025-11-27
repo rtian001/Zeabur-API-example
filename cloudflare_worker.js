@@ -22,11 +22,10 @@ export default {
         const url = new URL(request.url);
         const pathname = url.pathname;
         const searchparams = url.searchParams
-        const hostname = url.hostname;
         const path = pathname.split('/')[1]
         const account = pathname.split('/')[2] || ''
         //****从服务器更新数据 ;限定域名*/
-        if (path == 'update' && hostname == "z.6.e.1.1.4.2.0.0.0.7.4.0.1.0.0.2.ip6.arpa") {
+        if (path == 'update') {
             const _info = JSON.parse(sourcedata)
             var token = searchparams.get('token') || ''
             let results = {}
