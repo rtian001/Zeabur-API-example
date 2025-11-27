@@ -81,6 +81,8 @@ export default {
                             let status = cmd == "stop" ? 'SUSPENDED' : 'RUNNING';
                             _sinfo.service_status = status;
                             _sinfo.service_suspendedAt = result.update;
+                            // 写入KV
+                            await KV.put('zeabur',JSON.stringify(_info))
                             result.data = _sinfo
                         }
                     } else {
@@ -111,18 +113,7 @@ export default {
                 }
             });
         };
-        //******API更新数据到KV****** */
-        async function update_account(kv_data, token) {
-            let result = await query_regions(token);
-            if (!!result) {
-                let _username = result.name;
-                kv_data[_username] = result;
-                await KV.put('zeabur', JSON.stringify(kv_data));
-                return { success: true, messages: { account: _username, email: result.email, update: result.update } }
-            } else {
-                return { success: false, messages: 'token error.' }
-            }
-        }
+
     }//fetch
 }//default
 
