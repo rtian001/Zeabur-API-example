@@ -1,9 +1,16 @@
 export default {
     async fetch(request, env, ctx) {
         const KV = env.KV;
+        // 备份数据
+        // const BACKUP = env.BACKUP;
+        // const KV_keys=await KV.list();
+        // for(let key of KV_keys.keys){
+        //     let value=await KV.get(key.name)
+        //     await BACKUP.put(key.name,value)
+        // }
         const isBoundKV = (typeof KV == 'undefined') ? false : true;
-        var sourcedata='';
-        var info={};
+        var sourcedata;
+        var info;
         if (isBoundKV) {
             sourcedata = await KV.get('zeabur')
             if (!sourcedata) {
@@ -19,7 +26,7 @@ export default {
         const path = pathname.split('/')[1]
         const account = pathname.split('/')[2] || ''
         //****从服务器更新数据 ;限定域名*/
-        if (path == 'update') {
+        if (path == 'update' && hostname == "z.6.e.1.1.4.2.0.0.0.7.4.0.1.0.0.2.ip6.arpa") {
             const _info = JSON.parse(sourcedata)
             var token = searchparams.get('token') || ''
             let results = {}
@@ -46,8 +53,12 @@ export default {
         //****前端请求的数据 */
         else if (path == 'zeabur.json') {
             let obj = {}
-            for (let user in info) {
-                obj[user] = info[user].regions
+            if (isBoundKV) {
+                for (let user in info) {
+                    obj[user] = info[user].regions
+                }
+            }else{
+                obj={'未配置KV':[{"region_name":"请在Cloudflare中配置KV到该Workers","projects":[]},{}]}
             }
             return Response.json(obj)
         }
@@ -68,9 +79,9 @@ export default {
                     if (cmd.match(/start|stop/)) {
                         result = await process(_token, _eid, _sid, cmd)
                         if (result.success) {
-                            let status=cmd=="stop"?'SUSPENDED':'RUNNING';
-                            _sinfo.service_status=status;
-                            _sinfo.service_suspendedAt=result.update;
+                            let status = cmd == "stop" ? 'SUSPENDED' : 'RUNNING';
+                            _sinfo.service_status = status;
+                            _sinfo.service_suspendedAt = result.update;
                             result.data = _sinfo
                         }
                     } else {
@@ -90,9 +101,10 @@ export default {
         }
         //*****默认页面****** */
         else {
-            let html = await KV.get('zeabur-html');
-             if(!html){
-                html=await fetch('https://s.128877.xyz/zeabur_api.html').then(res=>res.text())
+            let html = '';
+            if(isBoundKV)html= await KV.get('zeabur-html')
+            if (!html) {
+                html = await fetch('https://s.128877.xyz/zeabur_api.html').then(res => res.text())
             }
             return new Response(html, {
                 headers: {
@@ -235,7 +247,7 @@ async function process(token, envid, sid, command) {
     let results = { success: false, messages: res }
     if (!!res) {
         results.success = true
-        results.update=command=='stop'?new Date().toISOString():null;
+        results.update = command == 'stop' ? new Date().toISOString() : null;
     }
     return results;
 }//process
