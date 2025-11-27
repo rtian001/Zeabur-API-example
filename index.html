@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Zeabur服务器监控面板</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #000;
+                color: #e0e0e0;
+                line-height: 1.6;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            /* 自定义滚动条样式 */
+            ::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+            }
+
+            ::-webkit-scrollbar-track {
+                background-color: transparent;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background-color: rgba(99, 50, 255, 0.2);
+                border-radius: 3px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background-color: rgba(99, 0, 255, 0.6);
+            }
+
+            .container {
+                display: flex;
+                height: 100vh;
+                width: 1150px;
+                margin: 0 auto;
+                background-color: #121212;
+            }
+
+            /* 左侧账户栏样式 */
+            .sidebar {
+                width: 250px;
+                background-color: #1a1a1a;
+                color: #e0e0e0;
+                padding: 20px;
+                overflow-y: auto;
+                border-right: 1px solid #333;
+            }
+
+            .sidebar h2 {
+                font-size: 20px;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #333;
+                color: #e0e0e0;
+            }
+
+            .account-list {
+                list-style: none;
+            }
+
+            .account-item {
+                padding: 12px 15px;
+                margin-bottom: 8px;
+                background-color: #2a2a2a;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+                color: #e0e0e0;
+            }
+
+            .account-item:hover {
+                background-color: #3a3a3a;
+            }
+
+            .account-item.active {
+                background-color: rgba(99, 0, 255, 1);
+                font-weight: bold;
+                color: #fff;
+            }
+
+            /* 右侧主内容区域样式 */
+            .main-content {
+                flex: 1;
+                padding: 20px;
+                overflow-y: scroll;
+                background-color: #121212;
+            }
+
+            h1 {
+                text-align: center;
+                color: #e0e0e0;
+                margin-bottom: 30px;
+                padding: 20px;
+                background-color: #1a1a1a;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            }
+
+            .current-account {
+                background-color: #1a1a1a;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+                margin-bottom: 20px;
+                font-size: 18px;
+                font-weight: bold;
+                color: #e0e0e0;
+            }
+
+            .region-card {
+                background-color: #1a1a1a;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 30px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            }
+
+            .region-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid rgba(99, 0, 255, 1);
+            }
+
+            .region-name {
+                font-size: 24px;
+                font-weight: bold;
+                color: #e0e0e0;
+            }
+
+            .region-name::before {
+                content: "区域：";
+                font-weight: bold;
+                color: #888;
+            }
+
+            .region-id {
+                display: none;
+            }
+
+            .project-list {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+
+            .project-card {
+                min-width: 300px;
+                flex-shrink: 0;
+            }
+
+            .project-card {
+                background-color: #2a2a2a;
+                border-radius: 6px;
+                padding: 15px;
+                border-left: 4px solid rgba(99, 0, 255, 1);
+            }
+
+            .project-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+            .project-name {
+                font-size: 18px;
+                font-weight: bold;
+                color: #e0e0e0;
+            }
+
+            .project-name::before {
+                content: "项目：";
+                font-weight: bold;
+                color: #888;
+            }
+
+            .project-id {
+                display: none;
+            }
+
+            .service-list {
+                margin-top: 15px;
+                display: flex;
+                gap: 10px;
+                overflow-x: auto;
+                padding-bottom: 10px;
+                flex-wrap: wrap;
+            }
+
+            .service-item {
+                background-color: #333;
+                border-radius: 4px;
+                padding: 15px;
+                border: 1px solid #444;
+                min-width: 250px;
+                min-height: 120px;
+                flex-shrink: 0;
+                position: relative;
+            }
+
+            .service-header {
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+                margin-bottom: 5px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .service-name {
+                font-weight: bold;
+                color: #e0e0e0;
+                font-size: 14px;
+            }
+
+            .service-status {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                padding: 3px 10px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+
+            .service-status.RUNNING {
+                background-color: #27ae60;
+                color: #fff;
+            }
+
+            .service-status.STOPPED {
+                background-color: #e74c3c;
+                color: #fff;
+            }
+
+            .service-status.PENDING {
+                background-color: #f39c12;
+                color: #fff;
+            }
+
+            .service-status.SUSPENDED {
+                background-color: #ff4500;
+                color: #fff;
+            }
+
+            .service-created-at,
+            .service-suspended-at {
+                font-size: 12px;
+                color: #999;
+                margin-top: 5px;
+                margin-bottom: 5px;
+                line-height: 1.4;
+            }
+
+            .toggle-btn {
+                position: absolute;
+                bottom: 10px;
+                right: 10px;
+                padding: 4px 12px;
+                border: 1px solid #555;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: bold;
+                background-color: transparent;
+                color: #e0e0e0;
+                transition: all 0.3s;
+            }
+
+            .toggle-btn.start:hover:not(:disabled) {
+                background-color: #27ae60;
+                color: #fff;
+                border-color: #27ae60;
+            }
+
+            .toggle-btn.stop:hover:not(:disabled) {
+                background-color: #e74c3c;
+                color: #fff;
+                border-color: #e74c3c;
+            }
+
+            .toggle-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                border-color: #444;
+            }
+
+            .empty-services {
+                text-align: center;
+                color: #95a5a6;
+                font-style: italic;
+                padding: 20px;
+            }
+
+            .loading {
+                text-align: center;
+                font-size: 18px;
+                color: #3498db;
+                padding: 50px;
+            }
+
+            .error {
+                text-align: center;
+                font-size: 18px;
+                color: #e74c3c;
+                padding: 50px;
+            }
+
+            /* 模态层样式 */
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(5px);
+            }
+
+            .modal-content {
+                background-color: #2a2a2a;
+                margin: 15% auto;
+                padding: 20px;
+                border: 1px solid #444;
+                border-radius: 8px;
+                width: 300px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            }
+
+            .modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #444;
+            }
+
+            .modal-title {
+                font-size: 18px;
+                font-weight: bold;
+                color: #e0e0e0;
+            }
+
+            .close {
+                color: #aaa;
+                font-size: 24px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: color 0.3s;
+            }
+
+            .close:hover {
+                color: #fff;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 5px;
+                color: #e0e0e0;
+                font-size: 14px;
+            }
+
+            .form-group input {
+                width: 100%;
+                padding: 8px 12px;
+                background-color: #3a3a3a;
+                border: 1px solid #444;
+                border-radius: 4px;
+                color: #e0e0e0;
+                font-size: 14px;
+            }
+
+            .form-group input:focus {
+                outline: none;
+                border-color: rgba(99, 0, 255, 1);
+                box-shadow: 0 0 0 2px rgba(99, 0, 255, 0.2);
+            }
+
+            .form-actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                margin-top: 20px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: bold;
+                transition: all 0.3s;
+            }
+
+            .btn-primary {
+                background-color: rgba(99, 0, 255, 1);
+                color: #fff;
+            }
+
+            .btn-primary:hover {
+                background-color: rgba(80, 0, 200, 1);
+            }
+
+            .btn-secondary {
+                background-color: #444;
+                color: #e0e0e0;
+            }
+
+            .btn-secondary:hover {
+                background-color: #555;
+            }
+
+            /* 增加账户按钮样式 */
+            .add-account-btn {
+                padding: 12px 15px;
+                margin-bottom: 8px;
+                background-color: #2a2a2a;
+                border: 2px dashed #444;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                color: #888;
+                text-align: center;
+                font-size: 14px;
+            }
+
+            .add-account-btn:hover {
+                background-color: #3a3a3a;
+                border-color: rgba(99, 0, 255, 0.6);
+                color: rgba(255, 255, 255, 1);
+            }
+
+            @media (max-width: 768px) {
+                .container {
+                    padding: 10px;
+                }
+
+                .project-list {
+                    grid-template-columns: 1fr;
+                }
+
+                .region-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .region-id {
+                    margin-top: 10px;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <!-- 左侧账户栏 -->
+            <div class="sidebar">
+                <h2>账户列表</h2>
+                <ul id="account-list" class="account-list">
+                    <!-- 账户列表将通过JavaScript动态生成 -->
+                </ul>
+            </div>
+            <!-- 右侧主内容区域 -->
+            <div class="main-content">
+                <h1>Zeabur服务器监控面板</h1>
+                <div id="current-account" class="current-account"></div>
+                <div id="content" class="loading">加载中...</div>
+            </div>
+        </div>
+        <!-- API KEY输入模态层 -->
+        <div id="apiKeyModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">添加新账户</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <form id="apiKeyForm">
+                    <div class="form-group">
+                        <label for="apiKey">API KEY</label>
+                        <input type="text" id="apiKey" name="apiKey" placeholder="请输入API KEY" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
+                        <button type="submit" class="btn btn-primary">确认</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script>
+            // 全局变量存储JSON数据
+            let serverData = null;
+            let currentAccount = null;
+
+            // 读取JSON数据
+            async function loadJSONData() {
+                try {
+                    // 获取JSON数据
+                    const response = await fetch('zeabur.json');
+
+                    if (!response.ok) {
+                        throw new Error('网络请求失败');
+                    }
+
+                    return await response.json();
+                } catch (error) {
+                    const contentDiv = document.getElementById('content');
+                    contentDiv.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
+                    contentDiv.classList.remove('loading');
+                    console.error('加载JSON数据失败:', error);
+                    return null;
+                }
+            }
+
+            // 生成账户列表
+            function generateAccountList(data) {
+                const accountListDiv = document.getElementById('account-list');
+                accountListDiv.innerHTML = '';
+
+                for (const username in data) {
+                    if (data.hasOwnProperty(username)) {
+                        const accountItem = document.createElement('li');
+                        accountItem.className = 'account-item';
+                        accountItem.textContent = username;
+                        accountItem.dataset.username = username;
+
+                        // 添加点击事件
+                        accountItem.addEventListener('click', () => {
+                            selectAccount(username);
+                        });
+
+                        accountListDiv.appendChild(accountItem);
+                    }
+                }
+
+                // 添加"增加账户"按钮
+                const addAccountItem = document.createElement('li');
+                addAccountItem.className = 'add-account-btn';
+                addAccountItem.textContent = '+ 添加新账户';
+                addAccountItem.addEventListener('click', () => {
+                    // 显示API KEY输入模态层
+                    apiKeyModal.style.display = 'block';
+                });
+
+                accountListDiv.appendChild(addAccountItem);
+            }
+
+            // 选择账户
+            function selectAccount(username) {
+                // 更新当前账户
+                currentAccount = username;
+
+                // 更新账户列表的活跃状态
+                const accountItems = document.querySelectorAll('.account-item');
+                accountItems.forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelector(`[data-username="${username}"]`).classList.add('active');
+
+                // 更新当前账户显示
+                const currentAccountDiv = document.getElementById('current-account');
+                currentAccountDiv.textContent = `当前账户: ${username}`;
+
+                // 显示当前账户的服务器列表
+                displayServerList(username);
+            }
+
+            // 切换服务状态
+            async function toggleService(service, action) {
+                const sid = service.service_id;
+                let cmd = action === 'start' ? 'start' : 'stop';
+                // 发送POST请求到Zeabur API
+                const response = await fetch(`/process?sid=${sid}&cmd=${cmd}`).then(res => res.json());
+                if (!response.success) {
+                    throw new Error('网络请求失败');
+                } else {
+                    service.service_status = action === 'start' ? 'RUNNING' : 'STOPPED';
+                    console.log(`服务${action}成功`);
+                }
+                // 重新渲染当前账户的服务器列表
+                displayServerList(currentAccount);
+            }
+
+            // 显示服务器列表
+            function displayServerList(username) {
+                const contentDiv = document.getElementById('content');
+
+                if (!serverData || !serverData[username]) {
+                    contentDiv.innerHTML = '<div class="error">没有找到该账户的数据</div>';
+                    return;
+                }
+
+                const regions = serverData[username];
+
+                // 清空内容
+                contentDiv.innerHTML = '';
+                contentDiv.classList.remove('loading');
+
+                // 遍历每个区域
+                regions.forEach(region => {
+                    // 创建区域卡片
+                    const regionCard = document.createElement('div');
+                    regionCard.className = 'region-card';
+
+                    // 区域头部
+                    const regionHeader = document.createElement('div');
+                    regionHeader.className = 'region-header';
+
+                    const regionName = document.createElement('div');
+                    regionName.className = 'region-name';
+                    regionName.textContent = region.region_name;
+
+                    const regionId = document.createElement('div');
+                    regionId.className = 'region-id';
+                    regionId.textContent = region.region_id;
+
+                    regionHeader.appendChild(regionName);
+                    regionHeader.appendChild(regionId);
+
+                    // 项目列表
+                    const projectList = document.createElement('div');
+                    projectList.className = 'project-list';
+
+                    // 遍历每个项目
+                    region.projects.forEach(project => {
+                        // 创建项目卡片
+                        const projectCard = document.createElement('div');
+                        projectCard.className = 'project-card';
+
+                        // 项目头部
+                        const projectHeader = document.createElement('div');
+                        projectHeader.className = 'project-header';
+
+                        const projectName = document.createElement('div');
+                        projectName.className = 'project-name';
+                        projectName.textContent = project.project_name;
+
+                        const projectId = document.createElement('div');
+                        projectId.className = 'project-id';
+                        projectId.textContent = project.project_id;
+
+                        projectHeader.appendChild(projectName);
+                        projectHeader.appendChild(projectId);
+
+                        // 服务列表
+                        const serviceList = document.createElement('div');
+                        serviceList.className = 'service-list';
+
+                        if (project.services && project.services.length > 0) {
+                            // 遍历每个服务
+                            project.services.forEach(service => {
+                                // 创建服务项
+                                const serviceItem = document.createElement('div');
+                                serviceItem.className = 'service-item';
+
+                                // 服务头部
+                                const serviceHeader = document.createElement('div');
+                                serviceHeader.className = 'service-header';
+
+                                const serviceName = document.createElement('div');
+                                serviceName.className = 'service-name';
+                                serviceName.textContent = service.service_name;
+
+                                serviceHeader.appendChild(serviceName);
+
+                                // 服务状态 - 放置在右上角
+                                const serviceStatus = document.createElement('div');
+                                serviceStatus.className = `service-status ${service.service_status}`;
+                                serviceStatus.textContent = service.service_status;
+
+                                // 创建切换按钮
+                                const toggleBtn = document.createElement('button');
+                                toggleBtn.className = `toggle-btn ${service.service_status === 'RUNNING' ? 'stop' : 'start'}`;
+                                toggleBtn.textContent = service.service_status === 'RUNNING' ? '停止' : '启动';
+                                // SUSPENDED状态下允许启动，但不允许停止
+                                toggleBtn.disabled = false; // 所有状态下按钮都可以点击
+                                toggleBtn.addEventListener('click', () => {
+                                    // 根据当前状态和按钮类型决定执行的操作
+                                    if (service.service_status === 'RUNNING') {
+                                        // 运行状态下只能停止
+                                        toggleService(service, 'stop');
+                                    } else if (service.service_status === 'SUSPENDED') {
+                                        // SUSPENDED状态下允许启动，但不允许停止
+                                        toggleService(service, 'start');
+                                    } else {
+                                        // 停止或挂起状态下只能启动
+                                        toggleService(service, 'start');
+                                    }
+                                });
+
+                                // 创建时间 - 优先从数据中获取
+                                const serviceCreatedAt = document.createElement('div');
+                                serviceCreatedAt.className = 'service-created-at';
+                                // 检查是否有实际的createdAt字段
+                                const createdAt = service.service_createdAt;
+                                serviceCreatedAt.textContent = `创建时间: ${createdAt.toLocaleString('zh-CN')}`;
+
+                                // 挂起时间（仅当状态为SUSPENDED时显示）- 优先从数据中获取
+                                let serviceSuspendedAt;
+                                if (service.service_status === 'SUSPENDED') {
+                                    serviceSuspendedAt = document.createElement('div');
+                                    serviceSuspendedAt.className = 'service-suspended-at';
+                                    // 检查是否有实际的suspendedAt字段
+                                    const suspendedAt = service.service_suspendedAt;
+                                    serviceSuspendedAt.textContent = `挂起时间: ${suspendedAt.toLocaleString('zh-CN')}`;
+                                }
+
+                                serviceItem.appendChild(serviceStatus);
+                                serviceItem.appendChild(serviceHeader);
+                                serviceItem.appendChild(serviceCreatedAt);
+                                if (serviceSuspendedAt) {
+                                    serviceItem.appendChild(serviceSuspendedAt);
+                                }
+                                serviceItem.appendChild(toggleBtn);
+                                serviceList.appendChild(serviceItem);
+                            });
+                        } else {
+                            // 空服务提示
+                            const emptyServices = document.createElement('div');
+                            emptyServices.className = 'empty-services';
+                            emptyServices.textContent = '该项目下没有服务';
+                            serviceList.appendChild(emptyServices);
+                        }
+
+                        projectCard.appendChild(projectHeader);
+                        projectCard.appendChild(serviceList);
+                        projectList.appendChild(projectCard);
+                    });
+
+                    regionCard.appendChild(regionHeader);
+                    regionCard.appendChild(projectList);
+                    contentDiv.appendChild(regionCard);
+                });
+            }
+
+            // 初始化页面
+            async function init() {
+                const contentDiv = document.getElementById('content');
+                contentDiv.innerHTML = '加载中...';
+                contentDiv.classList.add('loading');
+
+                // 加载JSON数据
+                serverData = await loadJSONData();
+
+                if (serverData) {
+                    // 生成账户列表
+                    generateAccountList(serverData);
+
+                    // 默认选择第一个账户
+                    const firstAccount = Object.keys(serverData)[0];
+                    if (firstAccount) {
+                        selectAccount(firstAccount);
+                    } else {
+                        contentDiv.innerHTML = '<div class="error">没有找到账户数据</div>';
+                        contentDiv.classList.remove('loading');
+                    }
+                }
+            }
+
+            // 页面加载完成后执行
+            window.addEventListener('DOMContentLoaded', init);
+
+            // API KEY模态层处理
+            const apiKeyModal = document.getElementById('apiKeyModal');
+            const closeBtn = document.querySelector('.close');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const apiKeyForm = document.getElementById('apiKeyForm');
+
+            // 关闭模态层
+            function closeModal() {
+                apiKeyModal.style.display = 'none';
+                apiKeyForm.reset();
+            }
+
+            // 点击关闭按钮
+            closeBtn.addEventListener('click', closeModal);
+
+            // 点击取消按钮
+            cancelBtn.addEventListener('click', closeModal);
+
+            // 点击模态层外部关闭
+            window.addEventListener('click', (event) => {
+                if (event.target === apiKeyModal) {
+                    closeModal();
+                }
+            });
+
+            // 提交API KEY
+            apiKeyForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const apiKey = document.getElementById('apiKey').value;
+
+                try {
+                    // 发送更新请求
+                    const response = await fetch(`/update?token=${encodeURIComponent(apiKey)}`);
+
+                    if (!response.ok) {
+                        throw new Error('网络请求失败');
+                    }
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // 重新加载数据
+                        serverData = await loadJSONData();
+                        if (serverData) {
+                            generateAccountList(serverData);
+
+                            // 默认选择第一个账户
+                            const firstAccount = Object.keys(serverData)[0];
+                            if (firstAccount) {
+                                selectAccount(firstAccount);
+                            }
+                        }
+                        closeModal();
+                    } else {
+                        throw new Error(result.message || '更新失败');
+                    }
+                } catch (error) {
+                    alert(`添加账户失败: ${error.message}`);
+                    console.error('添加账户失败:', error);
+                }
+            });
+        </script>
+    </body>
+
+</html>
