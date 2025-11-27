@@ -1,5 +1,5 @@
 # Zeabur-API-example
-[![Deployed on Zeabur](https://zeabur.com/deployed-on-zeabur-dark.svg)](https://zeabur.com/referral?referralCode=devilolyOGey&utm_source=devilolyOGey)
+[![Deployed on Zeabur](https://zeabur.com/deployed-on-zeabur-dark.svg)](https://zeabur.com/referral?referralCode=rtian001&utm_source=rtian001)
 > Zeabur API Key 应用实例；
 >
 > 基于zeabur API KEY通过web管理监控服务；
