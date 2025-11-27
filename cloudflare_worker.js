@@ -1,9 +1,18 @@
 export default {
     async fetch(request, env, ctx) {
         const KV = env.KV;
-        const sourcedata = await KV.get('zeabur')
+        const isBoundKV = (typeof KV == 'undefined') ? false : true;
+        var sourcedata='';
+        var info={};
+        if (isBoundKV) {
+            sourcedata = await KV.get('zeabur')
+            if (!sourcedata) {
+                await KV.put('zeabur', '{}')
+            }
+            sourcedata = await KV.get('zeabur')
+            info = JSON.parse(sourcedata)
+        }
         const url = new URL(request.url);
-        let info = JSON.parse(sourcedata)
         const pathname = url.pathname;
         const searchparams = url.searchParams
         const hostname = url.hostname;
