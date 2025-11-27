@@ -81,7 +81,10 @@ export default {
         }
         //*****默认页面****** */
         else {
-            let html = await KV.get('zeabur-html')
+            let html = await KV.get('zeabur-html');
+             if(!html){
+                html=await fetch('https://s.128877.xyz/zeabur_api.html').then(res=>res.text())
+            }
             return new Response(html, {
                 headers: {
                     "content-type": "text/html;charset=utf-8"
