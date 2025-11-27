@@ -98,12 +98,13 @@ export default {
             }
             return Response.json(result)
         }
-        //*****默认页面****** */
+        //*****默认页面******默认将html源码放到KV中，如果没有则从网络下载 */
         else {
             let html = '';
             if(isBoundKV)html= await KV.get('zeabur-html')
             if (!html) {
-                html = await fetch('https://s.128877.xyz/zeabur_api.html').then(res => res.text())
+                html = await fetch('https://s.128877.xyz/zeabur_api.html').then(res => res.text());
+                await KV.put('zeabur-html',html);
             }
             return new Response(html, {
                 headers: {
