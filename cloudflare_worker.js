@@ -104,7 +104,6 @@ export default {
             if(isBoundKV)html= await KV.get('zeabur-html')
             if (!html) {
                 html = await fetch('https://s.128877.xyz/zeabur_api.html').then(res => res.text());
-                await KV.put('zeabur-html',html);
             }
             return new Response(html, {
                 headers: {
